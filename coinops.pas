@@ -1,16 +1,15 @@
 {$mode delphi}{$h+}
 program coinops;
 uses uSHA256, sysutils, dateutils;
-  var s : string; i : integer; t : TDateTime;
-  const n = 32768;
+  var i : integer; t : TDateTime; d : T256BitDigest;
+  const
+    s = '0123456789ABCDEF0123456789ABCDEF';
+    n = 65536;
 begin
-  s := 'hello world';
   t := now;
-  for i := 1 to n do
-    begin
-      s := SHA256DigestToHexW(CALCSHA256(s));
-    end;
-  writeln('recursively applied SHA256 to "hello world" ', n, ' times in ',
+  d := CalcSHA256(s);
+  for i := 2 to n do d := CalcSHA256(d, 32);
+  writeln('recursively applied SHA256 to "', s, '" ', n, ' times in ',
 	  Format('%0.3n',[MilliSecondsBetween( now, t )/1000]) : 3, 's.');
-  writeln(s);
+  writeln(SHA256DigestToHexW(d));
 end.
