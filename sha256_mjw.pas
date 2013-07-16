@@ -117,42 +117,47 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
+  { 0.004 }
   for I := 0 to 7 do H[I] := Digest.Longs[I];
 
-  { 0.2s }
   for I := 0 to 63 do
     begin
 
+      { 0.008 }
       s0 := h[0];
       asm
         MOV r8d, s0
         ROR r8d, 2
         MOV r9d, r8d
-        ROR r8d, 11  { for a total of 13 }
+        ROR r8d, 11    // for a total of 13
         XOR r9d, r8d
-        ROR r8d, 9   { for a total of 22 }
+        ROR r8d, 9     // for a total of 22
         XOR r9d, r8d
         MOV s0,  r9d
       end ['r8','r9'];
 
+      { 0.012 }
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
       T2 := S0 + Maj;
 
+      { 0.011 }
       s1 := h[4];
       asm
         MOV r8d, s1
         ROR r8d, 6
         MOV r9d, r8d
-        ROR r8d, 5  { for a total of 11 }
+        ROR r8d, 5     // for a total of 11
         XOR r9d, r8d
-        ROR r8d, 14  { for a total of 25 }
+        ROR r8d, 14    // for a total of 25
         XOR r9d, r8d
         MOV s1,  r9d
       end ['r8','r9'];
 
+      { 0.024 }
       Ch := (H[4] and H[5]) xor ((not H[4]) and H[6]);
       T1 := H[7] + S1 + Ch + SHA256K[I] + W[I];
 
+      { 0.027 }
       H[7] := H[6];
       H[6] := H[5];
       H[5] := H[4];
@@ -163,6 +168,7 @@ begin
       H[0] := T1 + T2;
     end;
 
+  { 0.003 }
   for I := 0 to 7 do Inc(Digest.Longs[I], H[I]);
 
 end;
