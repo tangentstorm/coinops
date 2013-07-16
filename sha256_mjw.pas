@@ -192,24 +192,32 @@ var
   H : array[0..7] of LongWord;
 begin
   P := @Buf;
+  { 0.002s }
   for I := 0 to 15 do
     begin
       W[I] := SwapEndian(P^);
       Inc(P);
     end;
+
+  { 0.07s }
   for I := 16 to 63 do
     begin
       S0 := SHA256Transform1(W[I - 15]);
       S1 := SHA256Transform2(W[I - 2]);
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
-  for I := 0 to 7 do
-    H[I] := Digest.Longs[I];
+
+  for I := 0 to 7 do H[I] := Digest.Longs[I];
+
+  { 0.2s }
   for I := 0 to 63 do
-    begin
+  begin
+      { ~ 0.06s }
       S0 := SHA256Transform3(H[0]);
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
       T2 := S0 + Maj;
+      s1 := 0;
+      { ~ 0.06s }
       S1 := SHA256Transform4(H[4]);
       Ch := (H[4] and H[5]) xor ((not H[4]) and H[6]);
       T1 := H[7] + S1 + Ch + SHA256K[I] + W[I];
@@ -222,54 +230,21 @@ begin
       H[1] := H[0];
       H[0] := T1 + T2;
     end;
-  for I := 0 to 7 do
-    Inc(Digest.Longs[I], H[I]);
-end;
 
-procedure SHA256Buf(var Digest: T256BitDigest; const Buf; const BufSize: Integer); inline;
-var P : PByte;
-    I, J : Integer;
-begin
-  I := BufSize;
-  if I <= 0 then
-    exit;
-  P := @Buf;
-  for J := 0 to I div 64 - 1 do
-    begin
-      TransformSHA256Buffer(Digest, P^);
-      Inc(P, 64);
-    end;
-end;
+  for I := 0 to 7 do Inc(Digest.Longs[I], H[I]);
 
-procedure SHA256FinalBuf(var Digest: T256BitDigest; const Buf; const BufSize: Integer; const TotalSize: Int64); inline;
-var B1, B2 : T512BitBuf;
-    C : Integer;
-begin
-  StdFinalBuf512(Buf, BufSize, TotalSize, B1, B2, C, True);
-  TransformSHA256Buffer(Digest, B1);
-  if C > 1 then
-    TransformSHA256Buffer(Digest, B2);
-  SwapEndianBuf(Digest, Sizeof(Digest) div Sizeof(LongWord));
 end;
 
 function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest;
   overload; inline;
-var I, J : Integer;
-    P    : PByte;
+  var B1, B2 : T512BitBuf;
+    C	   : Integer;
+    I	   : Integer;
 begin
   SHA256InitDigest(Result);
-  P := @Buf;
-  if BufSize <= 0 then
-    I := 0 else
-    I := BufSize;
-  J := (I div 64) * 64;
-  if J > 0 then
-    begin
-      SHA256Buf(Result, P^, J);
-      Inc(P, J);
-      Dec(I, J);
-    end;
-  SHA256FinalBuf(Result, P^, I, BufSize);
+  StdFinalBuf512(Buf, BufSize, BufSize, B1, B2, C, True);
+  TransformSHA256Buffer(Result, B1);
+  SwapEndianBuf(Result, Sizeof(Result) div Sizeof(LongWord));
 end;
 
 function CalcSHA256(const Buf: AnsiString): T256BitDigest; overload; inline;
