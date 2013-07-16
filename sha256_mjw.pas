@@ -109,11 +109,32 @@ begin
       Inc(P);
     end;
 
-  { 0.07s }
   for I := 16 to 63 do
     begin
-      S0 := ror(w[i-15], 7) xor ror(w[i-15], 18) xor (w[i-15] shr 3);
-      S1 := ror(w[i-2], 17) xor ror(w[i-2], 19) xor (w[i-2] shr 10);
+      s0 := w[i-15];
+      asm
+        MOV r8d, s0
+        ROR r8d, 7
+        MOV r9d, r8d
+        ROR r8d, 11    // for a total of 18
+        XOR r9d, r8d
+        MOV r8d, s0
+        SHR r8d, 3
+        XOR r9d, r8d
+        MOV s0,  r9d
+      end ['r8','r9'];
+      S1 := w[i-2];
+      asm
+        MOV r8d, s1
+        ROR r8d, 17
+        MOV r9d, r8d
+        ROR r8d, 2    // for a total of 19
+        XOR r9d, r8d
+        MOV r8d, s1
+        SHR r8d, 10
+        XOR r9d, r8d
+        MOV s1,  r9d
+      end ['r8','r9'];
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
