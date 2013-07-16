@@ -49,13 +49,7 @@ procedure SwapEndianBuf(var Buf; const Count: Integer); inline;
     end;
   end;
 
-function RotateLeftBits(const Value: LongWord; const Bits: Byte): LongWord; inline;
-  asm
-    MOV   CL, DL
-    ROL   EAX, CL
-  end;
-
-function RotateRightBits(const Value: LongWord; const Bits: Byte): LongWord; inline;
+function ror(const Value: LongWord; const Bits: Byte): LongWord; inline;
   begin
     result := value;
     asm
@@ -78,22 +72,22 @@ procedure SHA256InitDigest(var Digest: T256BitDigest); inline;
 
 function SHA256Transform1(const A: LongWord): LongWord; inline;
   begin
-    Result := RotateRightBits(A, 7) xor RotateRightBits(A, 18) xor (A shr 3);
+    Result := ror(A, 7) xor ror(A, 18) xor (A shr 3);
   end;
 
 function SHA256Transform2(const A: LongWord): LongWord; inline;
   begin
-    Result := RotateRightBits(A, 17) xor RotateRightBits(A, 19) xor (A shr 10);
+    Result := ror(A, 17) xor ror(A, 19) xor (A shr 10);
   end;
 
 function SHA256Transform3(const A: LongWord): LongWord; inline;
   begin
-    Result := RotateRightBits(A, 2) xor RotateRightBits(A, 13) xor RotateRightBits(A, 22);
+    Result := ror(A, 2) xor ror(A, 13) xor ror(A, 22);
   end;
 
 function SHA256Transform4(const A: LongWord): LongWord; inline;
   begin
-    Result := RotateRightBits(A, 6) xor RotateRightBits(A, 11) xor RotateRightBits(A, 25);
+    Result := ror(A, 6) xor ror(A, 11) xor ror(A, 25);
   end;
 
 const
