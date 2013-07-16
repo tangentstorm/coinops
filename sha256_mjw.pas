@@ -95,10 +95,10 @@ const
 procedure TransformSHA256Buffer(var Digest: T256BitDigest; const Buf); inline;
 var
   I : Integer;
-  W : array[0..63] of cardinal;
-  P : pcardinal;
-  S0, S1, Maj, T1, T2, Ch : cardinal;
-  H : array[0..7] of cardinal;
+  W : array[0..63] of uint32;
+  P : ^uint32;
+  S0, S1, Maj, T1, T2, Ch : uint32;
+  H : array[0..7] of uint32;
 begin
   P := @Buf;
 
