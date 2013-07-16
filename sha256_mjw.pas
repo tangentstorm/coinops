@@ -1,4 +1,4 @@
-{$mode objfpc}
+{$mode delphi}{$asmmode intel}
 program sha256_mjw;
 uses sysutils, dateutils;
   
@@ -9,9 +9,6 @@ type
       1 : (Words : array[0..15] of Word);
       2 : (Bytes : array[0..31] of Byte);
     end;
-  
-
-  type
   T512BitBuf = array[0..63] of Byte;
 
 {                                                                              }
@@ -37,8 +34,6 @@ begin
     end;
 end;
 
-
-    
 {                                                                              }
 { StdFinalBuf                                                                  }
 { Utility function to prepare final buffer(s).                                 }
@@ -67,14 +62,7 @@ begin
   Q^ := $80;
   Inc(Q);
 
-  {$IFDEF DELPHI5}
-  // Delphi 5 sometimes reports fatal error (internal error C1093) when compiling:
-  //   L := TotalSize * 8
-  L := TotalSize;
-  L := L * 8;
-  {$ELSE}
   L := TotalSize * 8;
-  {$ENDIF}
   if SwapEndian then
     ReverseMem(L, 8);
   if BufSize + 1 > 64 - Sizeof(Int64) then
@@ -124,11 +112,11 @@ end;
 
 function DigestToHexA(const Digest; const Size: Integer): AnsiString;
 begin
-  SetLength(Result, Size * 2);          
+  SetLength(Result, Size * 2);
   DigestToHexBufA(Digest, Size, Pointer(Result)^);
 end;
 
-  procedure SwapEndianBuf(var Buf; const Count: Integer);
+procedure SwapEndianBuf(var Buf; const Count: Integer);
 var P : PLongWord;
     I : Integer;
 begin
@@ -145,8 +133,7 @@ end;
 {                                                                              }
 procedure SecureClear(var Buf; const BufSize: Integer);
 begin
-  if BufSize <= 0 then
-    exit;
+  if BufSize <= 0 then exit;
   FillChar(Buf, BufSize, #$00);
 end;
 
@@ -155,56 +142,21 @@ begin
   SecureClear(Buf, SizeOf(Buf));
 end;
 
-{$IFDEF ASM386_DELPHI}
 function RotateLeftBits(const Value: LongWord; const Bits: Byte): LongWord;
 asm
-      MOV     CL, DL
-      ROL     EAX, CL
+    MOV   CL, DL
+    ROL   EAX, CL
 end;
-{$ELSE}
-function RotateLeftBits(const Value: LongWord; const Bits: Byte): LongWord;
-var I : Integer;
-    R : LongWord;
-begin
-  R := Value;
-  for I := 1 to Bits do
-    if R and $80000000 = 0 then
-      R := LongWord(R shl 1)
-    else
-      R := LongWord(R shl 1) or 1;
-  Result := R;
-end;
-{$ENDIF}
 
-{$IFDEF ASM386_DELPHI}
 function RotateRightBits(const Value: LongWord; const Bits: Byte): LongWord;
-asm
-      MOV     CL, DL
-      ROR     EAX, CL
-end;
-{$ELSE}
-function RotateRightBits(const Value: LongWord; const Bits: Byte): LongWord;
-var I, B : Integer;
 begin
-  Result := Value;
-  if Bits >= 32 then
-    B := Bits mod 32
-  else
-    B := Bits;
-  for I := 1 to B do
-    if Result and 1 = 0 then
-      Result := Result shr 1
-    else
-      Result := (Result shr 1) or $80000000;
+  result := value;
+  asm
+      MOV   CL, bits
+      ROR   result, CL
+  end
 end;
-{$ENDIF}
 
-
-
-
-{                                                                              }
-{ SHA256 hashing                                                               }
-{                                                                              }
 procedure SHA256InitDigest(var Digest: T256BitDigest);
 begin
   Digest.Longs[0] := $6a09e667;
@@ -323,7 +275,7 @@ begin
     SecureClear512(B2);
 end;
 
-function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest;
+  function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest; overload;
 var I, J : Integer;
     P    : PByte;
 begin
@@ -342,7 +294,7 @@ begin
   SHA256FinalBuf(Result, P^, I, BufSize);
 end;
 
-function CalcSHA256(const Buf: AnsiString): T256BitDigest;
+function CalcSHA256(const Buf: AnsiString): T256BitDigest; overload;
 begin
   Result := CalcSHA256(Pointer(Buf)^, Length(Buf));
 end;
