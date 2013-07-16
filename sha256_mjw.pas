@@ -14,19 +14,19 @@ type
 
 procedure DigestToHexBufA(const Digest; const Size: Integer; const Buf); inline;
   const
-    s_HexDigitsLower : String[16] = '0123456789abcdef';
+    s_HexDigitsLower : array[0..15] of char = '0123456789abcdef';
 
   var I : Integer;
     P : PAnsiChar;
     Q : PByte;
   begin
-    P := @Buf;;
+    P := @Buf;
     Q := @Digest;
     for I := 0 to Size - 1 do
       begin
-	P^ := s_HexDigitsLower[Q^ shr 4 + 1];
+	P^ := s_HexDigitsLower[Q^ shr 4];
 	Inc(P);
-	P^ := s_HexDigitsLower[Q^ and 15 + 1];
+	P^ := s_HexDigitsLower[Q^ and 15];
 	Inc(P);
 	Inc(Q);
       end;
