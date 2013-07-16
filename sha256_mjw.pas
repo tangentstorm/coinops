@@ -128,20 +128,6 @@ begin
     end;
 end;
 
-{                                                                              }
-{ Secure memory clear                                                          }
-{                                                                              }
-procedure SecureClear(var Buf; const BufSize: Integer); inline;
-begin
-  if BufSize <= 0 then exit;
-  FillChar(Buf, BufSize, #$00);
-end;
-
-procedure SecureClear512(var Buf: T512BitBuf); inline;
-begin
-  SecureClear(Buf, SizeOf(Buf));
-end;
-
 function RotateLeftBits(const Value: LongWord; const Bits: Byte): LongWord; inline;
 asm
     MOV   CL, DL
@@ -270,9 +256,6 @@ begin
   if C > 1 then
     TransformSHA256Buffer(Digest, B2);
   SwapEndianBuf(Digest, Sizeof(Digest) div Sizeof(LongWord));
-  SecureClear512(B1);
-  if C > 1 then
-    SecureClear512(B2);
 end;
 
 function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest;
