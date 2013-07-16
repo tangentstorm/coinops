@@ -49,9 +49,6 @@ var P, Q : PByte;
     I : Integer;
     L : Int64;
 begin
-  Assert(BufSize < 64, 'Final BufSize must be less than 64 bytes');
-  Assert(TotalSize >= BufSize, 'TotalSize >= BufSize');
-
   P := @Buf;
   Q := @Buf1[0];
   if BufSize > 0 then
@@ -97,9 +94,7 @@ var I : Integer;
     Q : PByte;
 begin
   P := @Buf;;
-  Assert(Assigned(P));
   Q := @Digest;
-  Assert(Assigned(Q));
   for I := 0 to Size - 1 do
     begin
       P^ := s_HexDigitsLower[Q^ shr 4 + 1];
@@ -238,7 +233,6 @@ begin
   I := BufSize;
   if I <= 0 then
     exit;
-  Assert(I mod 64 = 0, 'BufSize must be multiple of 64 bytes');
   P := @Buf;
   for J := 0 to I div 64 - 1 do
     begin
