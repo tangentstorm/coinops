@@ -15,7 +15,7 @@ type
 { ReverseMem                                                                   }
 { Utility function to reverse order of data in buffer.                         }
 {                                                                              }
-procedure ReverseMem(var Buf; const BufSize: Integer);
+procedure ReverseMem(var Buf; const BufSize: Integer); inline;
 var I : Integer;
     P : PByte;
     Q : PByte;
@@ -40,11 +40,11 @@ end;
 { Fills Buf1 and potentially Buf2 from Buf (FinalBufCount = 1 or 2).           }
 { Used by MD5, SHA1, SHA256, SHA512.                                           }
 {                                                                              }
-procedure StdFinalBuf512(
-          const Buf; const BufSize: Integer; const TotalSize: Int64;
-          var Buf1, Buf2: T512BitBuf;
-          var FinalBufs: Integer;
-          const SwapEndian: Boolean);
+procedure StdFinalBuf512(	     
+	    const Buf; const BufSize : Integer; const TotalSize: Int64;
+	      var Buf1, Buf2	     : T512BitBuf;
+	      var FinalBufs	     : Integer;
+	    const SwapEndian	     : Boolean); inline;
 var P, Q : PByte;
     I : Integer;
     L : Int64;
@@ -91,7 +91,7 @@ end;
 const
   s_HexDigitsLower : String[16] = '0123456789abcdef';
 
-procedure DigestToHexBufA(const Digest; const Size: Integer; const Buf);
+procedure DigestToHexBufA(const Digest; const Size: Integer; const Buf); inline;
 var I : Integer;
     P : PAnsiChar;
     Q : PByte;
@@ -110,13 +110,13 @@ begin
     end;
 end;
 
-function DigestToHexA(const Digest; const Size: Integer): AnsiString;
+function DigestToHexA(const Digest; const Size: Integer): AnsiString; inline;
 begin
   SetLength(Result, Size * 2);
   DigestToHexBufA(Digest, Size, Pointer(Result)^);
 end;
 
-procedure SwapEndianBuf(var Buf; const Count: Integer);
+procedure SwapEndianBuf(var Buf; const Count: Integer); inline;
 var P : PLongWord;
     I : Integer;
 begin
@@ -131,24 +131,24 @@ end;
 {                                                                              }
 { Secure memory clear                                                          }
 {                                                                              }
-procedure SecureClear(var Buf; const BufSize: Integer);
+procedure SecureClear(var Buf; const BufSize: Integer); inline;
 begin
   if BufSize <= 0 then exit;
   FillChar(Buf, BufSize, #$00);
 end;
 
-procedure SecureClear512(var Buf: T512BitBuf);
+procedure SecureClear512(var Buf: T512BitBuf); inline;
 begin
   SecureClear(Buf, SizeOf(Buf));
 end;
 
-function RotateLeftBits(const Value: LongWord; const Bits: Byte): LongWord;
+function RotateLeftBits(const Value: LongWord; const Bits: Byte): LongWord; inline;
 asm
     MOV   CL, DL
     ROL   EAX, CL
 end;
 
-function RotateRightBits(const Value: LongWord; const Bits: Byte): LongWord;
+function RotateRightBits(const Value: LongWord; const Bits: Byte): LongWord; inline;
 begin
   result := value;
   asm
@@ -157,7 +157,7 @@ begin
   end
 end;
 
-procedure SHA256InitDigest(var Digest: T256BitDigest);
+procedure SHA256InitDigest(var Digest: T256BitDigest); inline;
 begin
   Digest.Longs[0] := $6a09e667;
   Digest.Longs[1] := $bb67ae85;
@@ -169,22 +169,22 @@ begin
   Digest.Longs[7] := $5be0cd19;
 end;
 
-function SHA256Transform1(const A: LongWord): LongWord;
+function SHA256Transform1(const A: LongWord): LongWord; inline;
 begin
   Result := RotateRightBits(A, 7) xor RotateRightBits(A, 18) xor (A shr 3);
 end;
 
-function SHA256Transform2(const A: LongWord): LongWord;
+function SHA256Transform2(const A: LongWord): LongWord; inline;
 begin
   Result := RotateRightBits(A, 17) xor RotateRightBits(A, 19) xor (A shr 10);
 end;
 
-function SHA256Transform3(const A: LongWord): LongWord;
+function SHA256Transform3(const A: LongWord): LongWord; inline;
 begin
   Result := RotateRightBits(A, 2) xor RotateRightBits(A, 13) xor RotateRightBits(A, 22);
 end;
 
-function SHA256Transform4(const A: LongWord): LongWord;
+function SHA256Transform4(const A: LongWord): LongWord; inline;
 begin
   Result := RotateRightBits(A, 6) xor RotateRightBits(A, 11) xor RotateRightBits(A, 25);
 end;
@@ -202,7 +202,7 @@ const
     $748f82ee, $78a5636f, $84c87814, $8cc70208, $90befffa, $a4506ceb, $bef9a3f7, $c67178f2
   );
 
-procedure TransformSHA256Buffer(var Digest: T256BitDigest; const Buf);
+procedure TransformSHA256Buffer(var Digest: T256BitDigest; const Buf); inline;
 var
   I : Integer;
   W : array[0..63] of LongWord;
@@ -245,7 +245,7 @@ begin
     Inc(Digest.Longs[I], H[I]);
 end;
 
-procedure SHA256Buf(var Digest: T256BitDigest; const Buf; const BufSize: Integer);
+procedure SHA256Buf(var Digest: T256BitDigest; const Buf; const BufSize: Integer); inline;
 var P : PByte;
     I, J : Integer;
 begin
@@ -261,7 +261,7 @@ begin
     end;
 end;
 
-procedure SHA256FinalBuf(var Digest: T256BitDigest; const Buf; const BufSize: Integer; const TotalSize: Int64);
+procedure SHA256FinalBuf(var Digest: T256BitDigest; const Buf; const BufSize: Integer; const TotalSize: Int64); inline;
 var B1, B2 : T512BitBuf;
     C : Integer;
 begin
@@ -275,7 +275,8 @@ begin
     SecureClear512(B2);
 end;
 
-  function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest; overload;
+function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest;
+  overload; inline;
 var I, J : Integer;
     P    : PByte;
 begin
@@ -294,12 +295,12 @@ begin
   SHA256FinalBuf(Result, P^, I, BufSize);
 end;
 
-function CalcSHA256(const Buf: AnsiString): T256BitDigest; overload;
+function CalcSHA256(const Buf: AnsiString): T256BitDigest; overload; inline;
 begin
   Result := CalcSHA256(Pointer(Buf)^, Length(Buf));
 end;
 
-function SHA256DigestToHexA(const Digest: T256BitDigest): AnsiString;
+function SHA256DigestToHexA(const Digest: T256BitDigest): AnsiString; inline;
 begin
   Result := DigestToHexA(Digest, Sizeof(Digest));
 end;
