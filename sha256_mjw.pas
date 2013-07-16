@@ -49,7 +49,7 @@ procedure SwapEndianBuf(var Buf; const Count: Integer); inline;
     end;
   end;
 
-function ror(const Value: LongWord; const Bits: Byte): LongWord; inline;
+function ror(const value: cardinal; const bits: Byte): cardinal; inline;
   begin
     result := value;
     asm
@@ -70,25 +70,6 @@ procedure SHA256InitDigest(var Digest: T256BitDigest); inline;
     Digest.Longs[7] := $5be0cd19;
   end;
 
-function SHA256Transform1(const A: LongWord): LongWord; inline;
-  begin
-    Result := ror(A, 7) xor ror(A, 18) xor (A shr 3);
-  end;
-
-function SHA256Transform2(const A: LongWord): LongWord; inline;
-  begin
-    Result := ror(A, 17) xor ror(A, 19) xor (A shr 10);
-  end;
-
-function SHA256Transform3(const A: LongWord): LongWord; inline;
-  begin
-    Result := ror(A, 2) xor ror(A, 13) xor ror(A, 22);
-  end;
-
-function SHA256Transform4(const A: LongWord): LongWord; inline;
-  begin
-    Result := ror(A, 6) xor ror(A, 11) xor ror(A, 25);
-  end;
 
 const
   // first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311
@@ -114,10 +95,10 @@ const
 procedure TransformSHA256Buffer(var Digest: T256BitDigest; const Buf); inline;
 var
   I : Integer;
-  W : array[0..63] of LongWord;
-  P : PLongWord;
-  S0, S1, Maj, T1, T2, Ch : LongWord;
-  H : array[0..7] of LongWord;
+  W : array[0..63] of cardinal;
+  P : pcardinal;
+  S0, S1, Maj, T1, T2, Ch : cardinal;
+  H : array[0..7] of cardinal;
 begin
   P := @Buf;
 
@@ -131,8 +112,8 @@ begin
   { 0.07s }
   for I := 16 to 63 do
     begin
-      S0 := SHA256Transform1(W[I - 15]);
-      S1 := SHA256Transform2(W[I - 2]);
+      S0 := ror(w[i-15], 7) xor ror(w[i-15], 18) xor (w[i-15] shr 3);
+      S1 := ror(w[i-2], 17) xor ror(w[i-2], 19) xor (w[i-2] shr 10);
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
@@ -141,15 +122,17 @@ begin
   { 0.2s }
   for I := 0 to 63 do
     begin
+
       { ~ 0.06s }
-      S0 := SHA256Transform3(H[0]);
+      s0 := ror(H[0], 2) xor ror(H[0], 13) xor ror(H[0], 22);
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
       T2 := S0 + Maj;
-      s1 := 0;
+
       { ~ 0.06s }
-      S1 := SHA256Transform4(H[4]);
+      S1 := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25);
       Ch := (H[4] and H[5]) xor ((not H[4]) and H[6]);
       T1 := H[7] + S1 + Ch + SHA256K[I] + W[I];
+      
       H[7] := H[6];
       H[6] := H[5];
       H[5] := H[4];
