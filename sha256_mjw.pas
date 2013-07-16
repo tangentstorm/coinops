@@ -123,16 +123,36 @@ begin
   for I := 0 to 63 do
     begin
 
-      { ~ 0.06s }
-      s0 := ror(H[0], 2) xor ror(H[0], 13) xor ror(H[0], 22);
+      s0 := h[0];
+      asm
+        MOV r8d, s0
+        ROR r8d, 2
+        MOV r9d, r8d
+        ROR r8d, 11  { for a total of 13 }
+        XOR r9d, r8d
+        ROR r8d, 9   { for a total of 22 }
+        XOR r9d, r8d
+        MOV s0,  r9d
+      end ['r8','r9'];
+
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
       T2 := S0 + Maj;
 
-      { ~ 0.06s }
-      S1 := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25);
+      s1 := h[4];
+      asm
+        MOV r8d, s1
+        ROR r8d, 6
+        MOV r9d, r8d
+        ROR r8d, 5  { for a total of 11 }
+        XOR r9d, r8d
+        ROR r8d, 14  { for a total of 25 }
+        XOR r9d, r8d
+        MOV s1,  r9d
+      end ['r8','r9'];
+
       Ch := (H[4] and H[5]) xor ((not H[4]) and H[6]);
       T1 := H[7] + S1 + Ch + SHA256K[I] + W[I];
-      
+
       H[7] := H[6];
       H[6] := H[5];
       H[5] := H[4];
