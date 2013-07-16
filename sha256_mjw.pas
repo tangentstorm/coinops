@@ -122,37 +122,11 @@ begin
     end;
 end;
 
-procedure DigestToHexBufW(const Digest; const Size: Integer; const Buf);
-var I : Integer;
-    P : PWideChar;
-    Q : PByte;
-begin
-  P := @Buf;;
-  Assert(Assigned(P));
-  Q := @Digest;
-  Assert(Assigned(Q));
-  for I := 0 to Size - 1 do
-    begin
-      P^ := WideChar(s_HexDigitsLower[Q^ shr 4 + 1]);
-      Inc(P);
-      P^ := WideChar(s_HexDigitsLower[Q^ and 15 + 1]);
-      Inc(P);
-      Inc(Q);
-    end;
-end;
-
 function DigestToHexA(const Digest; const Size: Integer): AnsiString;
 begin
   SetLength(Result, Size * 2);          
   DigestToHexBufA(Digest, Size, Pointer(Result)^);
 end;
-
-function DigestToHexW(const Digest; const Size: Integer): WideString;
-begin
-  SetLength(Result, Size * 2);
-  DigestToHexBufW(Digest, Size, Pointer(Result)^);
-end;
-
 
   procedure SwapEndianBuf(var Buf; const Count: Integer);
 var P : PLongWord;
@@ -276,7 +250,6 @@ const
     $748f82ee, $78a5636f, $84c87814, $8cc70208, $90befffa, $a4506ceb, $bef9a3f7, $c67178f2
   );
 
-{$IFOPT Q+}{$DEFINE QOn}{$Q-}{$ELSE}{$UNDEF QOn}{$ENDIF}
 procedure TransformSHA256Buffer(var Digest: T256BitDigest; const Buf);
 var
   I : Integer;
@@ -319,7 +292,6 @@ begin
   for I := 0 to 7 do
     Inc(Digest.Longs[I], H[I]);
 end;
-{$IFDEF QOn}{$Q+}{$ENDIF}
 
 procedure SHA256Buf(var Digest: T256BitDigest; const Buf; const BufSize: Integer);
 var P : PByte;
@@ -375,24 +347,12 @@ begin
   Result := CalcSHA256(Pointer(Buf)^, Length(Buf));
 end;
 
-function SHA256DigestToStrA(const Digest: T256BitDigest): AnsiString;
-begin
-  SetLength(Result, Sizeof(Digest));
-  Move(Digest, Pointer(Result)^, Sizeof(Digest));
-end;
-
 function SHA256DigestToHexA(const Digest: T256BitDigest): AnsiString;
 begin
   Result := DigestToHexA(Digest, Sizeof(Digest));
 end;
 
-function SHA256DigestToHexW(const Digest: T256BitDigest): WideString;
-begin
-  Result := DigestToHexW(Digest, Sizeof(Digest));
-end;
-
  
-  
   var i : integer; t : TDateTime; d : T256BitDigest;
   const
     s = '0123456789ABCDEF0123456789ABCDEF';
@@ -404,7 +364,7 @@ begin
   for i := 2 to n do d := CalcSHA256(d, 32);
   writeln('recursively applied SHA256 to "', s, '" ', n, ' times in ',
 	  Format('%0.3n',[MilliSecondsBetween( now, t )/1000]) : 3, 's.');
-  writeln(SHA256DigestToHexW(d));
+  writeln(SHA256DigestToHexA(d));
 end.
 
 
