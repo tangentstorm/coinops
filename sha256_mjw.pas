@@ -144,12 +144,12 @@ begin
   e := digest.longs[4]; f := digest.longs[5];
   g := digest.longs[6]; h := digest.longs[7];
 
-  for I := 0 to 63 do
-    begin
+  asm
+    mov ecx, 0
+    @start: { for ecx := 0 to 63 }
 
       // s0 {r10d} := ror(a, 2) xor ror(a, 13) xor ror(a, 22)
       // s1 {r11d} := ror(e, 6) xor ror(e, 11) xor ror(e, 25)
-      asm
         MOV r8d, a                 ; MOV r9d, e
         ROR r8d, 2		   ; ROR r9d, 6
         MOV r10d, r8d		   ; MOV r11d, r9d
@@ -157,15 +157,14 @@ begin
         XOR r10d, r8d		   ; XOR r11d, r9d
         ROR r8d, 9     {22 total}  ; ROR r9d, 14    {25 total}
         XOR r10d, r8d		   ; XOR r11d, r9d
-                       		   ; MOV s1,  r11d
 
-        // maj { r12d } :=
-        //   (a and b) xor (a and c) xor (b and c)
+        // maj { r12d } := (a and b) xor (a and c) xor (b and c)
         mov r8d,  a
         mov r9d,  b
         mov r13d, r9d // set aside a copy of b
         and r9d,  r8d
         mov r12d, c
+
         and r8d, r12d  { a and c }
         xor r9d, r8d
         and r12d, r13d { c and b }
@@ -186,10 +185,8 @@ begin
         // T1 {r11d} := H[7] + S1{r11d} + Ch_ + SHA256K[I] + W[I];
         ADD r11d, h
         ADD r11d, r8d { ch }
-        MOV r8d, I
-        SHL r8d, 2
-        ADD r11d, SHA256K[r8]
-        ADD r11d, W[r8]
+        ADD r11d, SHA256K[rcx*4]
+        ADD r11d, W[rcx*4]
 
         MOV r8d, g     ; MOV h, r8d  { h := g }
         MOV r8d, f     ; MOV g, r8d  { g := f }
@@ -200,7 +197,10 @@ begin
         MOV r8d, b     ; MOV c, r8d  { c := b }
         MOV r8d, a     ; MOV b, r8d  { b := a }
         ADD r11d, r12d ; MOV a, r11d { a := t1 + t2 }
-      end
+
+      inc ecx
+      cmp ecx, 64
+      jne @start
     end;
 
   { 0.003 }
