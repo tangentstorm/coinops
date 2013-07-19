@@ -44,15 +44,6 @@ procedure SwapEndianBuf(var Buf; const Count: Integer); inline;
     end;
   end;
 
-function ror(const value: cardinal; const bits: Byte): cardinal; inline;
-  begin
-    result := value;
-    asm
-      MOV   CL, bits
-      ROR   result, CL
-    end
-  end;
-
 procedure SHA256InitDigest(var Digest: T256BitDigest); inline;
   begin
     Digest[0] := $6a09e667;
