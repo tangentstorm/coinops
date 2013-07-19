@@ -145,15 +145,16 @@ begin
     begin
 
       { 0.008 }
-      s0 := h[0];
+      // s0 := ror(h[0], 2) xor ror(h[0], 13) xor ror(h[0], 22)
       asm
-        MOV r8d, s0
+        MOV r8d, h[0]
         ROR r8d, 2
         MOV r9d, r8d
         ROR r8d, 11    // for a total of 13
         XOR r9d, r8d
         ROR r8d, 9     // for a total of 22
         XOR r9d, r8d
+
         MOV s0,  r9d
       end ['r8','r9'];
 
@@ -162,9 +163,9 @@ begin
       T2 := S0 + Maj;
 
       { 0.011 }
-      s1 := h[4];
+      // s1 := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25)
       asm
-        MOV r8d, s1
+        MOV r8d, h[4*4]
         ROR r8d, 6
         MOV r9d, r8d
         ROR r8d, 5     // for a total of 11
