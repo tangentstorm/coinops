@@ -3,12 +3,7 @@ program sha256_mjw;
 uses sysutils, dateutils;
 
 type
-  T256BitDigest = record
-    case integer of
-      0 : (Longs : array[0..7] of LongWord);
-      1 : (Words : array[0..15] of Word);
-      2 : (Bytes : array[0..31] of Byte);
-    end;
+  T256BitDigest = array[0..7] of uint32;
   T512BitBuf = array[0..63] of Byte;
 
 
@@ -60,14 +55,14 @@ function ror(const value: cardinal; const bits: Byte): cardinal; inline;
 
 procedure SHA256InitDigest(var Digest: T256BitDigest); inline;
   begin
-    Digest.Longs[0] := $6a09e667;
-    Digest.Longs[1] := $bb67ae85;
-    Digest.Longs[2] := $3c6ef372;
-    Digest.Longs[3] := $a54ff53a;
-    Digest.Longs[4] := $510e527f;
-    Digest.Longs[5] := $9b05688c;
-    Digest.Longs[6] := $1f83d9ab;
-    Digest.Longs[7] := $5be0cd19;
+    Digest[0] := $6a09e667;
+    Digest[1] := $bb67ae85;
+    Digest[2] := $3c6ef372;
+    Digest[3] := $a54ff53a;
+    Digest[4] := $510e527f;
+    Digest[5] := $9b05688c;
+    Digest[6] := $1f83d9ab;
+    Digest[7] := $5be0cd19;
   end;
 
 
@@ -139,10 +134,10 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  a := digest.longs[0]; b := digest.longs[1];
-  c := digest.longs[2]; d := digest.longs[3];
-  e := digest.longs[4]; f := digest.longs[5];
-  g := digest.longs[6]; h := digest.longs[7];
+  a := digest[0]; b := digest[1];
+  c := digest[2]; d := digest[3];
+  e := digest[4]; f := digest[5];
+  g := digest[6]; h := digest[7];
 
   asm
     mov ecx, 0
@@ -204,10 +199,10 @@ begin
     end;
 
   { 0.003 }
-  inc(digest.longs[0], a); inc(digest.longs[1], b);
-  inc(digest.longs[2], c); inc(digest.longs[3], d);
-  inc(digest.longs[4], e); inc(digest.longs[5], f);
-  inc(digest.longs[6], g); inc(digest.longs[7], h);
+  inc(digest[0], a); inc(digest[1], b);
+  inc(digest[2], c); inc(digest[3], d);
+  inc(digest[4], e); inc(digest[5], f);
+  inc(digest[6], g); inc(digest[7], h);
 
 end;
 
