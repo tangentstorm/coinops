@@ -155,9 +155,7 @@ begin
         ROR r8d, 9     {22 total}  ; ROR r9d, 14    {25 total}
         XOR r10d, r8d		   ; XOR r11d, r9d
                        		   ; MOV s1,  r11d
-      end ['r8','r9', 'r10', 'r11'];
 
-      asm
         // maj { r12d } :=
         //   (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2])
         mov r8d,  h[0*4]
@@ -172,14 +170,9 @@ begin
         and r12d, r13d { h[2] and h[1] }
         xor r12d, r9d
 
-        // T2 := S0 + Maj;
-        MOV r8d, r12d { maj .. TODO: just use r12 directly below}
-
-        // r10d still contains  s0, so now add them
-        // we put the result in r8d so we can use s0 again later.
-        ADD r8d, r10d
-        MOV t2, r8d
-        { done with s0/r10d }
+        // T2 {r12d} := S0 {r10d} + Maj {r12d};
+        ADD r12d, r10d
+        MOV T2, r12d
 
         // Ch {r8d} := (H[4] and H[5]) xor ((not H[4]) and H[6]);
         mov r8d, h[4*5]
@@ -190,16 +183,14 @@ begin
         and r9d, r10d
         xor r8d, r9d
 
-        // T1 {r13d} := H[7] + S1 + Ch_ + SHA256K[I] + W[I];
-        MOV r13d, h[7*4]
-        ADD r13d, r11d
-        { done with r11d as s1 }
-        ADD r13d, r8d
+        // T1 {r11d} := H[7] + S1{r11d} + Ch_ + SHA256K[I] + W[I];
+        ADD r11d, h[7*4]
+        ADD r11d, r8d { ch }
         MOV r8d, I
         SHL r8d, 2
-        ADD r13d, SHA256K[r8]
-        ADD r13d, W[r8]
-        MOV T1, r13d
+        ADD r11d, SHA256K[r8]
+        ADD r11d, W[r8]
+        MOV T1, r11d
       end;
 
       { 0.027 }
