@@ -144,17 +144,18 @@ begin
   for I := 0 to 63 do
     begin
 
-      { 0.008 }
       // s0 := ror(h[0], 2) xor ror(h[0], 13) xor ror(h[0], 22)
+      // s1 := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25)
       asm
-        MOV r8d, h[0]
-        ROR r8d, 2
-        MOV r10d, r8d
-        ROR r8d, 11    {13 total}
-        XOR r10d, r8d
-        ROR r8d, 9     {22 total}
-        XOR r10d, r8d
-      end ['r8','r10'];
+        MOV r8d, h[0]              ; MOV r9d, h[4*4]
+        ROR r8d, 2		   ; ROR r9d, 6
+        MOV r10d, r8d		   ; MOV r11d, r9d
+        ROR r8d, 11    {13 total}  ; ROR r9d, 5     {11 total}
+        XOR r10d, r8d		   ; XOR r11d, r9d
+        ROR r8d, 9     {22 total}  ; ROR r9d, 14    {25 total}
+        XOR r10d, r8d		   ; XOR r11d, r9d
+                       		   ; MOV s1,  r11d
+      end ['r8','r9', 'r10', 'r11'];
 
       { 0.012 }
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
@@ -166,19 +167,6 @@ begin
         ADD r8d, r10d
         MOV t2, r8d
       end;
-
-      { 0.011 }
-      // s1 := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25)
-      asm
-        MOV r9d, h[4*4]
-        ROR r9d, 6
-        MOV r11d, r9d
-        ROR r9d, 5     {11 total}
-        XOR r11d, r9d
-        ROR r9d, 14    {25 total}
-        XOR r11d, r9d
-        MOV s1,  r11d
-      end ['r9','r11'];
 
       { 0.024 }
       Ch := (H[4] and H[5]) xor ((not H[4]) and H[6]);
