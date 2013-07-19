@@ -97,7 +97,7 @@ var
   I : Integer;
   W : array[0..63] of uint32;
   P : ^uint32;
-  S0, S1, Maj, T1, T2, Ch_ : uint32;
+  S0, S1, Maj, T1, T2 : uint32;
   H : array[0..7] of uint32;
 begin
   P := @Buf;
@@ -159,23 +159,31 @@ begin
 
       { 0.012 }
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
-      // T2 := S0 + Maj;
+
+
       asm
+        // T2 := S0 + Maj;
         MOV r8d, maj
+
         // r10d still contains  s0, so now add them
         // we put the result in r8d so we can use s0 again later.
         ADD r8d, r10d
         MOV t2, r8d
-      end;
+        { done with r10d and r11d. }
 
-      { 0.024 }
-      Ch_ := (H[4] and H[5]) xor ((not H[4]) and H[6]);
+        // Ch {r8d} := (H[4] and H[5]) xor ((not H[4]) and H[6]);
+        mov r8d, h[4*5]
+        mov r9d, h[4*4]
+        and r8d, r9d
+        not r9d
+        mov r10d, h[6*4]
+        and r9d, r10d
+        xor r8d, r9d
 
-      // T1 := H[7] + S1 + Ch_ + SHA256K[I] + W[I];
-      asm
+        // T1 {r13d} := H[7] + S1 + Ch_ + SHA256K[I] + W[I];
         MOV r13d, h[7*4]
         ADD r13d, r11d
-        ADD r13d, Ch_
+        ADD r13d, r8d
         MOV r8d, I
         SHL r8d, 2
         ADD r13d, SHA256K[r8]
