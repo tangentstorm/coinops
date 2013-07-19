@@ -98,7 +98,8 @@ var
   W : array[0..63] of uint32;
   P : ^uint32;
   S0, S1, Maj, T1, T2 : uint32;
-  H : array[0..7] of uint32;
+  a,b,c,d,e,f,g,h : uint32;
+
 begin
   P := @Buf;
 
@@ -138,16 +139,22 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  { 0.004 }
-  for I := 0 to 7 do H[I] := Digest.Longs[I];
+  a := digest.longs[0];
+  b := digest.longs[1];
+  c := digest.longs[2];
+  d := digest.longs[3];
+  e := digest.longs[4];
+  f := digest.longs[5];
+  g := digest.longs[6];
+  h := digest.longs[7];
 
   for I := 0 to 63 do
     begin
 
-      // s0 {r10d} := ror(h[0], 2) xor ror(h[0], 13) xor ror(h[0], 22)
-      // s1 {r11d} := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25)
+      // s0 {r10d} := ror(a, 2) xor ror(a, 13) xor ror(a, 22)
+      // s1 {r11d} := ror(e, 6) xor ror(e, 11) xor ror(e, 25)
       asm
-        MOV r8d, h[0]              ; MOV r9d, h[4*4]
+        MOV r8d, a                 ; MOV r9d, e
         ROR r8d, 2		   ; ROR r9d, 6
         MOV r10d, r8d		   ; MOV r11d, r9d
         ROR r8d, 11    {13 total}  ; ROR r9d, 5     {11 total}
@@ -157,55 +164,63 @@ begin
                        		   ; MOV s1,  r11d
 
         // maj { r12d } :=
-        //   (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2])
-        mov r8d,  h[0*4]
-        mov r9d,  h[1*4]
-        mov r13d, r9d // set aside a copy of h[1]
+        //   (a and b) xor (a and c) xor (b and c)
+        mov r8d,  a
+        mov r9d,  b
+        mov r13d, r9d // set aside a copy of b
         and r9d,  r8d
 
-        mov r12d, h[2*4]
-        and r8d, r12d  { h[0] and h[2] }
+        mov r12d, c
+        and r8d, r12d  { a and c }
         xor r9d, r8d
 
-        and r12d, r13d { h[2] and h[1] }
+        and r12d, r13d { c and b }
         xor r12d, r9d
 
         // T2 {r12d} := S0 {r10d} + Maj {r12d};
         ADD r12d, r10d
         MOV T2, r12d
 
-        // Ch {r8d} := (H[4] and H[5]) xor ((not H[4]) and H[6]);
-        mov r8d, h[4*5]
-        mov r9d, h[4*4]
+        // Ch {r8d} := (e and f) xor ((not e) and g);
+        mov r8d, f
+        mov r9d, e
         and r8d, r9d
         not r9d
-        mov r10d, h[6*4]
+        mov r10d, g
         and r9d, r10d
         xor r8d, r9d
 
         // T1 {r11d} := H[7] + S1{r11d} + Ch_ + SHA256K[I] + W[I];
-        ADD r11d, h[7*4]
+        ADD r11d, h
         ADD r11d, r8d { ch }
         MOV r8d, I
         SHL r8d, 2
         ADD r11d, SHA256K[r8]
         ADD r11d, W[r8]
         MOV T1, r11d
-      end;
+
+      end ['r8d'];
 
       { 0.027 }
-      H[7] := H[6];
-      H[6] := H[5];
-      H[5] := H[4];
-      H[4] := H[3] + T1;
-      H[3] := H[2];
-      H[2] := H[1];
-      H[1] := H[0];
-      H[0] := T1 + T2;
+      h := g; // r.h = g
+      g := f;
+      f := e;
+      e := d + T1;
+      d := c;
+      c := b;
+      b := a;
+      a := T1 + T2;
     end;
 
   { 0.003 }
-  for I := 0 to 7 do Inc(Digest.Longs[I], H[I]);
+  inc(digest.longs[0], a);
+  inc(digest.longs[1], b);
+  inc(digest.longs[2], c);
+  inc(digest.longs[3], d);
+  inc(digest.longs[4], e);
+  inc(digest.longs[5], f);
+  inc(digest.longs[6], g);
+  inc(digest.longs[7], h);
 
 end;
 
