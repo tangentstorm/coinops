@@ -160,7 +160,14 @@ begin
 
       { 0.012 }
       Maj := (H[0] and H[1]) xor (H[0] and H[2]) xor (H[1] and H[2]);
-      T2 := S0 + Maj;
+      // T2 := S0 + Maj;
+      asm
+        mov r8d, maj
+        // r9d still contains  s0, so now add them
+        // we put the result in r8d so we can use s0 again later.
+        add r8d, r9d
+        mov t2, r8d
+      end;
 
       { 0.011 }
       // s1 := ror(h[4], 6) xor ror(h[4], 11) xor ror(h[4], 25)
