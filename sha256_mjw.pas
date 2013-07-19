@@ -215,14 +215,13 @@ begin
 end;
 
 { Utility function to prepare final buffer(s).                         }
-{ Fills Buf1 and potentially Buf2 from Buf (FinalBufCount = 1 or 2).   }
+{ Fills Buf1 from Buf }
 procedure StdFinalBuf512(const Buf; const BufSize : Integer;
 			 var Buf1: T512BitBuf); inline;
-  var P, Q : PByte; I : Integer; L : Int64;
+  var Q : PByte; I : Integer; L : Int64;
   begin
-    P := @Buf;
     Q := @Buf1[0];
-    Move(P^, Q^, BufSize);
+    Move(buf, buf1, BufSize);
     Inc(Q, BufSize);
     Q^ := $80;
     Inc(Q);
