@@ -97,7 +97,7 @@ var
   I : Integer;
   W : array[0..63] of uint32;
   P : ^uint32;
-  S0, S1, Maj, T1, T2, Ch : uint32;
+  S0, S1, Maj, T1, T2, Ch_ : uint32;
   H : array[0..7] of uint32;
 begin
   P := @Buf;
@@ -169,8 +169,19 @@ begin
       end;
 
       { 0.024 }
-      Ch := (H[4] and H[5]) xor ((not H[4]) and H[6]);
-      T1 := H[7] + S1 + Ch + SHA256K[I] + W[I];
+      Ch_ := (H[4] and H[5]) xor ((not H[4]) and H[6]);
+
+      // T1 := H[7] + S1 + Ch_ + SHA256K[I] + W[I];
+      asm
+        MOV r13d, h[7*4]
+        ADD r13d, r11d
+        ADD r13d, Ch_
+        MOV r8d, I
+        SHL r8d, 2
+        ADD r13d, SHA256K[r8]
+        ADD r13d, W[r8]
+        MOV T1, r13d
+      end;
 
       { 0.027 }
       H[7] := H[6];
