@@ -139,14 +139,10 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  a := digest.longs[0];
-  b := digest.longs[1];
-  c := digest.longs[2];
-  d := digest.longs[3];
-  e := digest.longs[4];
-  f := digest.longs[5];
-  g := digest.longs[6];
-  h := digest.longs[7];
+  a := digest.longs[0]; b := digest.longs[1];
+  c := digest.longs[2]; d := digest.longs[3];
+  e := digest.longs[4]; f := digest.longs[5];
+  g := digest.longs[6]; h := digest.longs[7];
 
   for I := 0 to 63 do
     begin
@@ -169,17 +165,14 @@ begin
         mov r9d,  b
         mov r13d, r9d // set aside a copy of b
         and r9d,  r8d
-
         mov r12d, c
         and r8d, r12d  { a and c }
         xor r9d, r8d
-
         and r12d, r13d { c and b }
         xor r12d, r9d
 
         // T2 {r12d} := S0 {r10d} + Maj {r12d};
         ADD r12d, r10d
-        MOV T2, r12d
 
         // Ch {r8d} := (e and f) xor ((not e) and g);
         mov r8d, f
@@ -197,30 +190,24 @@ begin
         SHL r8d, 2
         ADD r11d, SHA256K[r8]
         ADD r11d, W[r8]
-        MOV T1, r11d
 
-      end ['r8d'];
-
-      { 0.027 }
-      h := g; // r.h = g
-      g := f;
-      f := e;
-      e := d + T1;
-      d := c;
-      c := b;
-      b := a;
-      a := T1 + T2;
+        MOV r8d, g     ; MOV h, r8d  { h := g }
+        MOV r8d, f     ; MOV g, r8d  { g := f }
+        MOV r8d, e     ; MOV f, r8d  { f := e }
+        MOV r8d, d
+        ADD r8d, r11d  ; MOV e, r8d  { e := d + t1 }
+        MOV r8d, c     ; MOV d, r8d  { d := c }
+        MOV r8d, b     ; MOV c, r8d  { c := b }
+        MOV r8d, a     ; MOV b, r8d  { b := a }
+        ADD r11d, r12d ; MOV a, r11d { a := t1 + t2 }
+      end
     end;
 
   { 0.003 }
-  inc(digest.longs[0], a);
-  inc(digest.longs[1], b);
-  inc(digest.longs[2], c);
-  inc(digest.longs[3], d);
-  inc(digest.longs[4], e);
-  inc(digest.longs[5], f);
-  inc(digest.longs[6], g);
-  inc(digest.longs[7], h);
+  inc(digest.longs[0], a); inc(digest.longs[1], b);
+  inc(digest.longs[2], c); inc(digest.longs[3], d);
+  inc(digest.longs[4], e); inc(digest.longs[5], f);
+  inc(digest.longs[6], g); inc(digest.longs[7], h);
 
 end;
 
