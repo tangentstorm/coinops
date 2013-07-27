@@ -289,18 +289,38 @@ function SHA256DigestToHexA(const Digest: T256BitDigest): AnsiString; inline;
   end;
 
 
-var i : integer; t : TDateTime; d : T256BitDigest;
+var
+  i   : int64;
+  t   : TDateTime;
+  d   : T256BitDigest;
+  ms  : int64;
+  res : string;
 const
-  s = '0123456789ABCDEF0123456789ABCDEF';
-  n = 65536;
-
+  s	 = '0123456789ABCDEF0123456789ABCDEF';
+  ntimes = 1048576; // times to run. (default: 2**20 == 1048576)
+  goal	 = '887b1503cd35956546bb811453b5140056d2470f7e51719c4e8622932834e7bc';
 begin
   t := now;
   d := CalcSHA256(s);
-  for i := 2 to n do d := CalcSHA256(d, 32);
-  writeln('recursively applied SHA256 to "', s, '" ', n, ' times in ',
-	  Format('%0.3n',[MilliSecondsBetween( now, t )/1000]) : 3, 's.');
-  writeln(SHA256DigestToHexA(d));
+  for i := 2 to ntimes do d := CalcSHA256(d, 32);
+  ms := MilliSecondsBetween( now, t );
+  res := SHA256DigestToHexA(d);
+  if res <> goal then
+    begin
+      writeln('invalid result. ');
+      writeln('expected: ', goal);
+      writeln('found:    ', res);
+    end
+  else if ParamCount = 0 then
+    begin
+      writeln('recursively applied SHA256 to "', s, '" ');
+      writeln('ran ', ntimes, ' times in ', ms, ' ms. result was:');
+      writeln(res);
+    end
+  else if ParamStr(1) = '-q' then WriteLn(res)
+  else if ParamStr(1) = '-n' then WriteLn(ntimes)
+  else if ParamStr(1) = '-t' then WriteLn(ms)
+  else WriteLn('unknown option: ', ParamStr(1))
 end.
 
 {******************************************************************************}
