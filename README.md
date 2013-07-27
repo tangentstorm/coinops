@@ -7,7 +7,7 @@ adding useless junk operations (moving the contents of an arbitrary
 register into ram) can increase the speed of the executed code.
 
 A compiler flag is used to toggle the inclusion of several lines
-in sha256_mjw.pas, starting on (line 64)[https://github.com/tangentstorm/coinops/blob/junkops/sha256_mjw.pas#L164].
+in sha256_mjw.pas, starting on [line 64](https://github.com/tangentstorm/coinops/blob/junkops/sha256_mjw.pas#L164).
 
     avg time(ms) with -dJUNKOPS: 1822.84ms
     avg time(ms) without:        1836.44ms
