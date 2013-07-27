@@ -161,8 +161,9 @@ begin
         XOR r10d, r8d		   ; XOR r11d, r9d
         ROR r8d, 9     {22 total}  ; ROR r9d, 14    {25 total}
         XOR r10d, r8d		   ; XOR r11d, r9d
-                       		   ; MOV s1,  r11d
-
+{$IFDEF JUNKOPS}
+{ *** } MOV s1,  r11d // after XOR r10d, r8d ; XOR r11d, r9d
+{$ENDIF}
         // maj { r12d } :=
         //   (a and b) xor (a and c) xor (b and c)
         mov r8d,  a
@@ -176,7 +177,9 @@ begin
 
         and r12d, r13d { c and b }
         xor r12d, r9d
-
+{$IFDEF JUNKOPS}
+{ *** } MOV s1,  r9d // after mov r12d, c
+{$ENDIF}
         // T2 {r12d} := S0 {r10d} + Maj {r12d};
         ADD r12d, r10d
         MOV T2, r12d
@@ -189,7 +192,9 @@ begin
         mov r10d, g
         and r9d, r10d
         xor r8d, r9d
-
+{$IFDEF JUNKOPS}
+{ *** } MOV s1,  r12d //  maj calc, after xor r12d, r9d
+{$ENDIF}
         // T1 {r11d} := H[7] + S1{r11d} + Ch_ + SHA256K[I] + W[I];
         ADD r11d, h
         ADD r11d, r8d { ch }
