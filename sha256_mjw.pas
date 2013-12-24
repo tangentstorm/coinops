@@ -125,15 +125,13 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  {a := digest[0]; b := digest[1];}
-  c := digest[2]; d := digest[3];
   e := digest[4]; f := digest[5];
   g := digest[6]; h := digest[7];
   asm
     MOV  r13d, $6a09e667;  MOVD  mm0, r13d
     MOV  r13d, $bb67ae85;  MOVD  mm1, r13d
-    //MOV  r13d, c  ;  MOVD  mm2, r13d
-    //MOV  r13d, d  ;  MOVD  mm3, r13d
+    MOV  r13d, $3c6ef372;  MOVD  mm2, r13d
+    MOV  r13d, $a54ff53a;  MOVD  mm3, r13d
     //MOV  r13d, e  ;  MOVD  mm4, r13d
     //MOV  r13d, f  ;  MOVD  mm5, r13d
     //MOV  r13d, g  ;  MOVD  mm6, r13d
@@ -155,11 +153,11 @@ begin
         XOR r10d, r8d		   ; XOR r11d, r9d
 
         // maj { r12d } := (a and b) xor (a and c) xor (b and c)
-        movd r8d,  mm0
-        movd r9d,  mm1
-        mov r13d, r9d // set aside a copy of b
-        and r9d,  r8d
-        mov r12d, c
+        movd  r8d,  mm0
+        movd  r9d,  mm1
+        mov  r13d,  r9d // set aside a copy of b
+        and   r9d,  r8d
+        movd r12d,  mm2
 
         and r8d, r12d  { a and c }
         xor r9d, r8d
@@ -187,10 +185,10 @@ begin
         MOV   r8d, g     ; MOV    h, r8d  { h := g }
         MOV   r8d, f     ; MOV    g, r8d  { g := f }
         MOV   r8d, e     ; MOV    f, r8d  { f := e }
-        MOV   r8d, d
+        MOVD  r8d, mm3
         ADD   r8d, r11d  ; MOV    e, r8d  { e := d + t1 }
-        MOV   r8d, c     ; MOV    d, r8d  { d := c }
-        MOVD  r8d, mm1   ; MOV    c, r8d  { c := b }
+        MOVD  r8d, mm2   ; MOVD mm3, r8d  { d := c }
+        MOVD  r8d, mm1   ; MOVD mm2, r8d  { c := b }
         MOVD  r8d, mm0   ; MOVD mm1, r8d  { b := a }
         ADD  r11d, r12d  ; MOVD mm0, r11d { a := t1 + t2 }
 
@@ -203,8 +201,8 @@ begin
   asm
     MOVD r13d, mm0  ;   MOV  a, r13d
     MOVD r13d, mm1  ;   MOV  b, r13d
-    // MOVD r13d, mm2  ;   MOV  c, r13d
-    // MOVD r13d, mm3  ;   MOV  d, r13d
+    MOVD r13d, mm2  ;   MOV  c, r13d
+    MOVD r13d, mm3  ;   MOV  d, r13d
     // MOVD r13d, mm4  ;   MOV  e, r13d
     // MOVD r13d, mm5  ;   MOV  f, r13d
     // MOVD r13d, mm6  ;   MOV  g, r13d
