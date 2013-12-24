@@ -125,10 +125,20 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  a := digest[0]; b := digest[1];
+  {a := digest[0];} b := digest[1];
   c := digest[2]; d := digest[3];
   e := digest[4]; f := digest[5];
   g := digest[6]; h := digest[7];
+  asm
+    MOV  r13d, $6a09e667;  MOVD  mm0, r13d
+    //MOV  r13d, b  ;  MOVD  mm1, r13d
+    //MOV  r13d, c  ;  MOVD  mm2, r13d
+    //MOV  r13d, d  ;  MOVD  mm3, r13d
+    //MOV  r13d, e  ;  MOVD  mm4, r13d
+    //MOV  r13d, f  ;  MOVD  mm5, r13d
+    //MOV  r13d, g  ;  MOVD  mm6, r13d
+    //MOV  r13d, h  ;  MOVD  mm7, r13d
+  end;
 
   asm
     mov ecx, 0
@@ -136,7 +146,7 @@ begin
 
       // s0 {r10d} := ror(a, 2) xor ror(a, 13) xor ror(a, 22)
       // s1 {r11d} := ror(e, 6) xor ror(e, 11) xor ror(e, 25)
-        MOV r8d, a                 ; MOV r9d, e
+        MOVD r8d, mm0              ; MOV r9d, e
         ROR r8d, 2		   ; ROR r9d, 6
         MOV r10d, r8d		   ; MOV r11d, r9d
         ROR r8d, 11    {13 total}  ; ROR r9d, 5     {11 total}
@@ -145,7 +155,7 @@ begin
         XOR r10d, r8d		   ; XOR r11d, r9d
 
         // maj { r12d } := (a and b) xor (a and c) xor (b and c)
-        mov r8d,  a
+        movd r8d,  mm0
         mov r9d,  b
         mov r13d, r9d // set aside a copy of b
         and r9d,  r8d
@@ -174,15 +184,15 @@ begin
         ADD r11d, SHA256K[rcx*4]
         ADD r11d, W[rcx*4]
 
-        MOV r8d, g     ; MOV h, r8d  { h := g }
-        MOV r8d, f     ; MOV g, r8d  { g := f }
-        MOV r8d, e     ; MOV f, r8d  { f := e }
-        MOV r8d, d
-        ADD r8d, r11d  ; MOV e, r8d  { e := d + t1 }
-        MOV r8d, c     ; MOV d, r8d  { d := c }
-        MOV r8d, b     ; MOV c, r8d  { c := b }
-        MOV r8d, a     ; MOV b, r8d  { b := a }
-        ADD r11d, r12d ; MOV a, r11d { a := t1 + t2 }
+        MOV   r8d, g     ; MOV    h, r8d  { h := g }
+        MOV   r8d, f     ; MOV    g, r8d  { g := f }
+        MOV   r8d, e     ; MOV    f, r8d  { f := e }
+        MOV   r8d, d
+        ADD   r8d, r11d  ; MOV    e, r8d  { e := d + t1 }
+        MOV   r8d, c     ; MOV    d, r8d  { d := c }
+        MOV   r8d, b     ; MOV    c, r8d  { c := b }
+        MOVD  r8d, mm0   ; MOV    b, r8d  { b := a }
+        ADD  r11d, r12d  ; MOVD mm0, r11d { a := t1 + t2 }
 
       inc ecx
       cmp ecx, 64
@@ -190,6 +200,17 @@ begin
     end;
 
   { 0.003 }
+  asm
+    MOVD r13d, mm0  ;   MOV  a, r13d
+    // MOVD r13d, mm1  ;   MOV  b, r13d
+    // MOVD r13d, mm2  ;   MOV  c, r13d
+    // MOVD r13d, mm3  ;   MOV  d, r13d
+    // MOVD r13d, mm4  ;   MOV  e, r13d
+    // MOVD r13d, mm5  ;   MOV  f, r13d
+    // MOVD r13d, mm6  ;   MOV  g, r13d
+    // MOVD r13d, mm7  ;   MOV  h, r13d
+    EMMS // clear mmx state
+  end;
   inc(digest[0], a); inc(digest[1], b);
   inc(digest[2], c); inc(digest[3], d);
   inc(digest[4], e); inc(digest[5], f);
