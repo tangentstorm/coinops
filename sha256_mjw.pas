@@ -125,7 +125,6 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  g := digest[6]; h := digest[7];
   asm
     MOV  r13d, $6a09e667;  MOVD  mm0, r13d // a
     MOV  r13d, $bb67ae85;  MOVD  mm1, r13d // b
@@ -133,8 +132,8 @@ begin
     MOV  r13d, $a54ff53a;  MOVD  mm3, r13d // d
     MOV  r13d, $510e527f;  MOVD  mm4, r13d // e
     MOV  r13d, $9b05688c;  MOVD  mm5, r13d // f
-    //MOV  r13d, g  ;  MOVD  mm6, r13d
-    //MOV  r13d, h  ;  MOVD  mm7, r13d
+    MOV  r13d, $1f83d9ab;  MOVD  mm6, r13d // g
+    MOV  r13d, $5be0cd19;  MOVD  mm7, r13d // h
   end;
 
   asm
@@ -171,18 +170,19 @@ begin
         MOVD r9d, mm4
         and r8d, r9d
         not r9d
-        mov r10d, g
+        MOVD r10d, mm6
         and r9d, r10d
         xor r8d, r9d
 
         // T1 {r11d} := H[7] + S1{r11d} + Ch_ + SHA256K[I] + W[I];
-        ADD r11d, h
+        MOVD r13d, mm7
+        ADD r11d, r13d
         ADD r11d, r8d { ch }
         ADD r11d, SHA256K[rcx*4]
         ADD r11d, W[rcx*4]
 
-        MOV   r8d, g     ; MOV    h, r8d  { h := g }
-        MOVD  r8d, mm5   ; MOV    g, r8d  { g := f }
+        MOVD  r8d, mm6   ; MOVD mm7, r8d  { h := g }
+        MOVD  r8d, mm5   ; MOVD mm6, r8d  { g := f }
         MOVD  r8d, mm4   ; MOVD mm5, r8d  { f := e }
         MOVD  r8d, mm3
         ADD   r8d, r11d  ; MOVD mm4, r8d  { e := d + t1 }
@@ -204,8 +204,8 @@ begin
     MOVD r13d, mm3  ;   MOV  d, r13d
     MOVD r13d, mm4  ;   MOV  e, r13d
     MOVD r13d, mm5  ;   MOV  f, r13d
-    // MOVD r13d, mm6  ;   MOV  g, r13d
-    // MOVD r13d, mm7  ;   MOV  h, r13d
+    MOVD r13d, mm6  ;   MOV  g, r13d
+    MOVD r13d, mm7  ;   MOV  h, r13d
     EMMS // clear mmx state
   end;
   inc(digest[0], a); inc(digest[1], b);
