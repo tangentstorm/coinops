@@ -113,23 +113,22 @@ begin
     end;
 
   asm
-    MOV  r13d, $6a09e667;  MOVD  mm0, r13d // a
-    MOV  r13d, $bb67ae85;  MOVD  mm1, r13d // b
-    MOV  r13d, $3c6ef372;  MOVD  mm2, r13d // c
-    MOV  r13d, $a54ff53a;  MOVD  mm3, r13d // d
-    MOV  r13d, $510e527f;  MOVD  mm4, r13d // e
-    MOV  r13d, $9b05688c;  MOVD  mm5, r13d // f
-    MOV  r13d, $1f83d9ab;  MOVD  mm6, r13d // g
-    MOV  r13d, $5be0cd19;  MOVD  mm7, r13d // h
-  end;
 
-  asm
+    MOV  r13d, $6a09e667;  MOVD  xmm0, r13d // a
+    MOV  r13d, $bb67ae85;  MOVD  xmm1, r13d // b
+    MOV  r13d, $3c6ef372;  MOVD  xmm2, r13d // c
+    MOV  r13d, $a54ff53a;  MOVD  xmm3, r13d // d
+    MOV  r13d, $510e527f;  MOVD  xmm4, r13d // e
+    MOV  r13d, $9b05688c;  MOVD  xmm5, r13d // f
+    MOV  r13d, $1f83d9ab;  MOVD  xmm6, r13d // g
+    MOV  r13d, $5be0cd19;  MOVD  xmm7, r13d // h
+
     mov ecx, 0
     @start: { for ecx := 0 to 63 }
 
       // s0 {r10d} := ror(a, 2) xor ror(a, 13) xor ror(a, 22)
       // s1 {r11d} := ror(e, 6) xor ror(e, 11) xor ror(e, 25)
-        MOVD r8d, mm0              ; MOVD r9d, mm4
+        MOVD r8d, xmm0             ; MOVD r9d, xmm4
         ROR r8d, 2		   ; ROR r9d, 6
         MOV r10d, r8d		   ; MOV r11d, r9d
         ROR r8d, 11    {13 total}  ; ROR r9d, 5     {11 total}
@@ -138,11 +137,11 @@ begin
         XOR r10d, r8d		   ; XOR r11d, r9d
 
         // maj { r12d } := (a and b) xor (a and c) xor (b and c)
-        movd  r8d,  mm0
-        movd  r9d,  mm1
+        movd  r8d,  xmm0
+        movd  r9d,  xmm1
         mov  r13d,  r9d // set aside a copy of b
         and   r9d,  r8d
-        movd r12d,  mm2
+        movd r12d,  xmm2
 
         and r8d, r12d  { a and c }
         xor r9d, r8d
@@ -153,47 +152,43 @@ begin
         ADD r12d, r10d
 
         // Ch {r8d} := (e and f) xor ((not e) and g);
-        MOVD r8d, mm5
-        MOVD r9d, mm4
+        MOVD r8d, xmm5
+        MOVD r9d, xmm4
         and r8d, r9d
         not r9d
-        MOVD r10d, mm6
+        MOVD r10d, xmm6
         and r9d, r10d
         xor r8d, r9d
 
         // T1 {r11d} := H[7] + S1{r11d} + Ch_ + SHA256K[I] + W[I];
-        MOVD r13d, mm7
+        MOVD r13d, xmm7
         ADD r11d, r13d
         ADD r11d, r8d { ch }
         ADD r11d, SHA256K[rcx*4]
         ADD r11d, W[rcx*4]
 
-        MOVD  r8d, mm6   ; MOVD mm7, r8d  { h := g }
-        MOVD  r8d, mm5   ; MOVD mm6, r8d  { g := f }
-        MOVD  r8d, mm4   ; MOVD mm5, r8d  { f := e }
-        MOVD  r8d, mm3
-        ADD   r8d, r11d  ; MOVD mm4, r8d  { e := d + t1 }
-        MOVD  r8d, mm2   ; MOVD mm3, r8d  { d := c }
-        MOVD  r8d, mm1   ; MOVD mm2, r8d  { c := b }
-        MOVD  r8d, mm0   ; MOVD mm1, r8d  { b := a }
-        ADD  r11d, r12d  ; MOVD mm0, r11d { a := t1 + t2 }
+        MOVD  r8d, xmm6   ; MOVD xmm7, r8d  { h := g }
+        MOVD  r8d, xmm5   ; MOVD xmm6, r8d  { g := f }
+        MOVD  r8d, xmm4   ; MOVD xmm5, r8d  { f := e }
+        MOVD  r8d, xmm3
+        ADD   r8d, r11d   ; MOVD xmm4, r8d  { e := d + t1 }
+        MOVD  r8d, xmm2   ; MOVD xmm3, r8d  { d := c }
+        MOVD  r8d, xmm1   ; MOVD xmm2, r8d  { c := b }
+        MOVD  r8d, xmm0   ; MOVD xmm1, r8d  { b := a }
+        ADD  r11d, r12d   ; MOVD xmm0, r11d { a := t1 + t2 }
 
       inc ecx
       cmp ecx, 64
       jne @start
-    end;
 
-  { 0.003 }
-  asm
-    MOVD r13d, mm0  ; ADD  r13d, $6a09e667;  MOV  a, r13d;
-    MOVD r13d, mm1  ; ADD  r13d, $bb67ae85;  MOV  b, r13d;
-    MOVD r13d, mm2  ; ADD  r13d, $3c6ef372;  MOV  c, r13d;
-    MOVD r13d, mm3  ; ADD  r13d, $a54ff53a;  MOV  d, r13d;
-    MOVD r13d, mm4  ; ADD  r13d, $510e527f;  MOV  e, r13d;
-    MOVD r13d, mm5  ; ADD  r13d, $9b05688c;  MOV  f, r13d;
-    MOVD r13d, mm6  ; ADD  r13d, $1f83d9ab;  MOV  g, r13d;
-    MOVD r13d, mm7  ; ADD  r13d, $5be0cd19;  MOV  h, r13d;
-    EMMS // clear mmx state
+    MOVD r13d, xmm0  ; ADD  r13d, $6a09e667;  MOV  a, r13d;
+    MOVD r13d, xmm1  ; ADD  r13d, $bb67ae85;  MOV  b, r13d;
+    MOVD r13d, xmm2  ; ADD  r13d, $3c6ef372;  MOV  c, r13d;
+    MOVD r13d, xmm3  ; ADD  r13d, $a54ff53a;  MOV  d, r13d;
+    MOVD r13d, xmm4  ; ADD  r13d, $510e527f;  MOV  e, r13d;
+    MOVD r13d, xmm5  ; ADD  r13d, $9b05688c;  MOV  f, r13d;
+    MOVD r13d, xmm6  ; ADD  r13d, $1f83d9ab;  MOV  g, r13d;
+    MOVD r13d, xmm7  ; ADD  r13d, $5be0cd19;  MOV  h, r13d;
   end;
   digest[0]:=a; digest[1]:=b;
   digest[2]:=c; digest[3]:=d;
