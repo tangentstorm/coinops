@@ -125,15 +125,14 @@ begin
       W[I] := W[I - 16] + S0 + W[I - 7] + S1;
     end;
 
-  e := digest[4]; f := digest[5];
   g := digest[6]; h := digest[7];
   asm
-    MOV  r13d, $6a09e667;  MOVD  mm0, r13d
-    MOV  r13d, $bb67ae85;  MOVD  mm1, r13d
-    MOV  r13d, $3c6ef372;  MOVD  mm2, r13d
-    MOV  r13d, $a54ff53a;  MOVD  mm3, r13d
-    //MOV  r13d, e  ;  MOVD  mm4, r13d
-    //MOV  r13d, f  ;  MOVD  mm5, r13d
+    MOV  r13d, $6a09e667;  MOVD  mm0, r13d // a
+    MOV  r13d, $bb67ae85;  MOVD  mm1, r13d // b
+    MOV  r13d, $3c6ef372;  MOVD  mm2, r13d // c
+    MOV  r13d, $a54ff53a;  MOVD  mm3, r13d // d
+    MOV  r13d, $510e527f;  MOVD  mm4, r13d // e
+    MOV  r13d, $9b05688c;  MOVD  mm5, r13d // f
     //MOV  r13d, g  ;  MOVD  mm6, r13d
     //MOV  r13d, h  ;  MOVD  mm7, r13d
   end;
@@ -144,7 +143,7 @@ begin
 
       // s0 {r10d} := ror(a, 2) xor ror(a, 13) xor ror(a, 22)
       // s1 {r11d} := ror(e, 6) xor ror(e, 11) xor ror(e, 25)
-        MOVD r8d, mm0              ; MOV r9d, e
+        MOVD r8d, mm0              ; MOVD r9d, mm4
         ROR r8d, 2		   ; ROR r9d, 6
         MOV r10d, r8d		   ; MOV r11d, r9d
         ROR r8d, 11    {13 total}  ; ROR r9d, 5     {11 total}
@@ -168,8 +167,8 @@ begin
         ADD r12d, r10d
 
         // Ch {r8d} := (e and f) xor ((not e) and g);
-        mov r8d, f
-        mov r9d, e
+        MOVD r8d, mm5
+        MOVD r9d, mm4
         and r8d, r9d
         not r9d
         mov r10d, g
@@ -183,10 +182,10 @@ begin
         ADD r11d, W[rcx*4]
 
         MOV   r8d, g     ; MOV    h, r8d  { h := g }
-        MOV   r8d, f     ; MOV    g, r8d  { g := f }
-        MOV   r8d, e     ; MOV    f, r8d  { f := e }
+        MOVD  r8d, mm5   ; MOV    g, r8d  { g := f }
+        MOVD  r8d, mm4   ; MOVD mm5, r8d  { f := e }
         MOVD  r8d, mm3
-        ADD   r8d, r11d  ; MOV    e, r8d  { e := d + t1 }
+        ADD   r8d, r11d  ; MOVD mm4, r8d  { e := d + t1 }
         MOVD  r8d, mm2   ; MOVD mm3, r8d  { d := c }
         MOVD  r8d, mm1   ; MOVD mm2, r8d  { c := b }
         MOVD  r8d, mm0   ; MOVD mm1, r8d  { b := a }
@@ -203,8 +202,8 @@ begin
     MOVD r13d, mm1  ;   MOV  b, r13d
     MOVD r13d, mm2  ;   MOV  c, r13d
     MOVD r13d, mm3  ;   MOV  d, r13d
-    // MOVD r13d, mm4  ;   MOV  e, r13d
-    // MOVD r13d, mm5  ;   MOV  f, r13d
+    MOVD r13d, mm4  ;   MOV  e, r13d
+    MOVD r13d, mm5  ;   MOV  f, r13d
     // MOVD r13d, mm6  ;   MOV  g, r13d
     // MOVD r13d, mm7  ;   MOV  h, r13d
     EMMS // clear mmx state
