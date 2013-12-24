@@ -44,19 +44,6 @@ procedure SwapEndianBuf(var Buf; const Count: Integer); inline;
     end;
   end;
 
-procedure SHA256InitDigest(var Digest: T256BitDigest); inline;
-  begin
-    Digest[0] := $6a09e667;
-    Digest[1] := $bb67ae85;
-    Digest[2] := $3c6ef372;
-    Digest[3] := $a54ff53a;
-    Digest[4] := $510e527f;
-    Digest[5] := $9b05688c;
-    Digest[6] := $1f83d9ab;
-    Digest[7] := $5be0cd19;
-  end;
-
-
 const
   // first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311
   SHA256K: array[0..63] of LongWord = (
@@ -198,20 +185,20 @@ begin
 
   { 0.003 }
   asm
-    MOVD r13d, mm0  ;   MOV  a, r13d
-    MOVD r13d, mm1  ;   MOV  b, r13d
-    MOVD r13d, mm2  ;   MOV  c, r13d
-    MOVD r13d, mm3  ;   MOV  d, r13d
-    MOVD r13d, mm4  ;   MOV  e, r13d
-    MOVD r13d, mm5  ;   MOV  f, r13d
-    MOVD r13d, mm6  ;   MOV  g, r13d
-    MOVD r13d, mm7  ;   MOV  h, r13d
+    MOVD r13d, mm0  ; ADD  r13d, $6a09e667;  MOV  a, r13d;
+    MOVD r13d, mm1  ; ADD  r13d, $bb67ae85;  MOV  b, r13d;
+    MOVD r13d, mm2  ; ADD  r13d, $3c6ef372;  MOV  c, r13d;
+    MOVD r13d, mm3  ; ADD  r13d, $a54ff53a;  MOV  d, r13d;
+    MOVD r13d, mm4  ; ADD  r13d, $510e527f;  MOV  e, r13d;
+    MOVD r13d, mm5  ; ADD  r13d, $9b05688c;  MOV  f, r13d;
+    MOVD r13d, mm6  ; ADD  r13d, $1f83d9ab;  MOV  g, r13d;
+    MOVD r13d, mm7  ; ADD  r13d, $5be0cd19;  MOV  h, r13d;
     EMMS // clear mmx state
   end;
-  inc(digest[0], a); inc(digest[1], b);
-  inc(digest[2], c); inc(digest[3], d);
-  inc(digest[4], e); inc(digest[5], f);
-  inc(digest[6], g); inc(digest[7], h);
+  digest[0]:=a; digest[1]:=b;
+  digest[2]:=c; digest[3]:=d;
+  digest[4]:=e; digest[5]:=f;
+  digest[6]:=g; digest[7]:=h;
 
 end;
 
@@ -258,7 +245,6 @@ function CalcSHA256(const Buf; const BufSize: Integer): T256BitDigest;
   overload; inline;
   var B1 : T512BitBuf;
   begin
-    SHA256InitDigest(Result);
     StdFinalBuf512(Buf, BufSize, B1);
     TransformSHA256Buffer(Result, B1);
     SwapEndianBuf(Result, Sizeof(Result) div Sizeof(LongWord));
